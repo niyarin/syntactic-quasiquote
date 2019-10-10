@@ -1,8 +1,5 @@
 (define-library (niyarin syntactic-quasiquote)
-   (import (scheme base)
-           (gauche base)
-           (scheme write)
-           )
+   (import (scheme base))
    (export syntactic-quasiquote
            syntactic-car
            syntactic-cdr
