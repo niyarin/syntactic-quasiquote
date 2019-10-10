@@ -96,4 +96,24 @@
       => 'ng)
    )
 
+(begin;MAP1
+  (check
+      (test-syntax
+        (quote 
+            (syntactic-unquote
+              (syntactic-map1
+                  syntactic-car
+                  (syntactic-quote ((a 1)(b 2)))))))
+      => '(a b))
+
+   (check
+      (test-syntax
+        (quote 
+            (syntactic-unquote
+              (syntactic-map1
+                  (syntactic-lambda (x)
+                     (syntactic-car x))
+                  (syntactic-quote ((a 1)(b 2)))))))
+      => '(a b))
+  )
 (check-report)

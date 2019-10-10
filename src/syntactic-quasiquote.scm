@@ -53,6 +53,31 @@
                                   (cont-syntax #f)))))
                      (%equal b))))))
 
+     (define-syntax syntactic-map1
+         (syntax-rules (syntax-lambda)
+            ((_ (syntax-lambda (cont-arg) cont-body) fun ())
+             (let-syntax ((cont-syntax
+                            (syntax-rules ()
+                                 ((_ cont-arg) cont-body))))
+                  (cont-syntax 
+                    ())))
+            ((_ continuation fun (a ...))
+             (syntactic-map1 continuation "INTERNAL" () fun (a ...)))
+            ((_ continuation "INTERNAL" (res ...) fun (a1 a2 ...))
+             (%cps-syntactic-quasiquote-in-unquote
+               (syntax-lambda (it)
+                  (syntactic-map1
+                    continuation
+                    "INTERNAL"
+                    (res ... it)
+                    fun
+                    (a2 ...)))
+               (fun (syntactic-quote a1))))
+            ((_ (syntax-lambda (cont-arg) cont-body) "INTERNAL" (res ...) fun ())
+             (let-syntax ((cont-syntax (syntax-rules () ((_ cont-arg) cont-body))))
+               (cont-syntax (res ...))))
+            ))
+
      (define-syntax %cps-syntactic-quasiquote-in-unquote-expand 
          (syntax-rules (syntax-lambda)
             ((_ continuation
