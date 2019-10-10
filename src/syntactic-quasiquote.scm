@@ -153,49 +153,55 @@
                     obj)))))
 
      (define-syntax %cps-syntactic-quasiquote-list
-         (syntax-rules %... (syntactic-unquote syntactic-unquote-splicing syntax-lambda)
+         (syntax-rules (syntactic-unquote syntactic-unquote-splicing syntax-lambda)
             ((_ continuation (syntactic-unquote obj)) ;unquote
              (%cps-syntactic-quasiquote-in-unquote
                continuation
                 obj))
 
-            ((_ continuation (obj1 obj2  %...))
-             (%cps-syntactic-quasiquote-list continuation "INTERNAL" () (obj1 obj2 %...)))
+            ((_ continuation (obj1 obj2  ...))
+             (%cps-syntactic-quasiquote-list continuation "INTERNAL" () (obj1 obj2 ...)))
 
             ((_ continuation
                 "INTERNAL" 
-                (res %...)
-                ((syntactic-unquote-splicing obj1) obj2 %...))
+                (res ...)
+                ((syntactic-unquote-splicing obj1) obj2 ...))
              (%cps-syntactic-quasiquote-in-unquote
-               (syntax-lambda ((it ...))
-                  (%cps-syntactic-quasiquote-list
-                    continuation
-                    "INTERNAL"
-                    (res %... it ...)
-                    (obj2 %...)))
+               (syntax-lambda (args)
+                  (let-syntax
+                    ((ellipsis-expander
+                       (syntax-rules %%... ()
+                         ((_ (val %%...))
+                           (%cps-syntactic-quasiquote-list
+                             continuation
+                             "INTERNAL"
+                             (res ... val %%...)
+                             (obj2 ...))))))
+                    (ellipsis-expander
+                      args)))
                obj1))
 
             ((_ continuation
                 "INTERNAL"
-                (res %...)
-                (obj1 obj2 %...))
+                (res ...)
+                (obj1 obj2 ...))
              (%cps-syntactic-quasiquote
                (syntax-lambda (it)
                   (%cps-syntactic-quasiquote-list
                     continuation
                     "INTERNAL"
-                    (res %... it)
-                    (obj2 %...)))
+                    (res ... it)
+                    (obj2 ...)))
                obj1))
             ((_ (syntax-lambda (cont-arg) cont-body)
                 "INTERNAL"
-                (res %...)
+                (res ...)
                 ())
              (let-syntax ((cont-syntax
                             (syntax-rules ()
                               ((_ cont-arg) cont-body))))
                (cont-syntax
-                 (res %...))))))
+                 (res ...))))))
 
      (define-syntax %cps-syntactic-quasiquote
          (syntax-rules (syntax-lambda)
