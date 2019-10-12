@@ -116,4 +116,19 @@
                   (syntactic-quote ((a 1)(b 2)))))))
       => '(a b))
   )
+
+(begin ;UNQUOTE-SPLICING
+   (check
+      (test-syntax
+        (quote 
+          (
+          1
+          2
+          (syntactic-unquote-splicing
+            (syntactic-quote 
+              (3 4 5)))
+          6 7)))
+      => '(1 2 3 4 5 6 7))
+   )
+
 (check-report)
