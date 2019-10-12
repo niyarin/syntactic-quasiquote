@@ -9,55 +9,56 @@
            )
    (begin
 
+     (define-syntax %apply-syntax-lambda
+         (syntax-rules (syntax-lambda)
+            ((_ (syntax-lambda (cont-args) cont-body) args ...)
+             (let-syntax ((cont-syntax
+                            (syntax-rules ()
+                              ((_ cont-args) cont-body))))
+                  (cont-syntax args ...)))))
+
      (define-syntax syntactic-car
          (syntax-rules (syntax-lambda)
-           ((_ (syntax-lambda (cont-arg) cont-body) (a b ...))
-            (let-syntax ((cont-syntax
-                           (syntax-rules ()
-                              ((_ cont-arg) cont-body))))
-               (cont-syntax
-                 a)))))
+           ((_ continuation (a b ...))
+               (%apply-syntax-lambda 
+                 continuation
+                 a))))
 
      (define-syntax syntactic-cdr
          (syntax-rules (syntax-lambda)
-           ((_ (syntax-lambda (cont-arg) cont-body) (a b ...))
-            (let-syntax ((cont-syntax
-                           (syntax-rules ()
-                              ((_ cont-arg) cont-body))))
-               (cont-syntax
-                 (b ...) )))))
+           ((_ continuation (a b ...))
+            (%apply-syntax-lambda 
+              continuation
+              (b ...) ))))
 
      (define-syntax syntactic-cons
          (syntax-rules (syntax-lambda)
-           ((_ (syntax-lambda (cont-arg) cont-body) a b)
-            (let-syntax ((cont-syntax
-                           (syntax-rules ()
-                              ((_ cont-arg) cont-body))))
-               (cont-syntax
-                 (a . b) )))))
+           ((_ continuation a b)
+            (%apply-syntax-lambda
+              continuation
+              (a . b)))))
 
      (define-syntax syntactic-equal?
          (syntax-rules (syntax-lambda)
-            ((_ (syntax-lambda (cont-arg) cont-body) a b)
-             (let-syntax ((cont-syntax
-                            (syntax-rules ()
-                              ((_ cont-arg) cont-body))))
+            ((_ continuation a b)
                 (let-syntax ((%equal
                                (syntax-rules %... ()
                                  ((_ a) 
-                                  (cont-syntax #t))
+                                  (%apply-syntax-lambda
+                                    continuation
+                                    #t))
                                  ((_ v %...) 
-                                  (cont-syntax #f)))))
-                     (%equal b))))))
+                                  (%apply-syntax-lambda
+                                    continuation
+                                    #f)))))
+                     (%equal b)))))
 
      (define-syntax syntactic-map1
          (syntax-rules (syntax-lambda)
-            ((_ (syntax-lambda (cont-arg) cont-body) fun ())
-             (let-syntax ((cont-syntax
-                            (syntax-rules ()
-                                 ((_ cont-arg) cont-body))))
-                  (cont-syntax 
-                    ())))
+            ((_ continuation fun ())
+             (%apply-syntax-lambda 
+               continuation
+               ()))
             ((_ continuation fun (a ...))
              (syntactic-map1 continuation "INTERNAL" () fun (a ...)))
             ((_ continuation "INTERNAL" (res ...) fun (a1 a2 ...))
@@ -70,10 +71,10 @@
                     fun
                     (a2 ...)))
                (fun (syntactic-quote a1))))
-            ((_ (syntax-lambda (cont-arg) cont-body) "INTERNAL" (res ...) fun ())
-             (let-syntax ((cont-syntax (syntax-rules () ((_ cont-arg) cont-body))))
-               (cont-syntax (res ...))))
-            ))
+            ((_ continuation "INTERNAL" (res ...) fun ())
+             (%apply-syntax-lambda
+               continuation
+               (res ...)))))
 
      (define-syntax %cps-syntactic-quasiquote-in-unquote-expand 
          (syntax-rules (syntax-lambda)
@@ -104,18 +105,15 @@
 
      (define-syntax %cps-syntactic-quasiquote-in-unquote
          (syntax-rules (syntax-lambda syntactic-quote syntactic-lambda)
-            ((_ (syntax-lambda (cont-arg) cont-body) (syntactic-quote  obj));QUOTE
-             (let-syntax ((cont-syntax (syntax-rules () ((_ cont-arg) cont-body))))
-                         (cont-syntax obj)))
-            ((_ (syntax-lambda (cont-arg) cont-body)
+            ((_ continuation (syntactic-quote  obj));QUOTE
+               (%apply-syntax-lambda continuation obj))
+            ((_ continuation
                 (syntactic-lambda (arg ...) body));LAMBDA
-               (let-syntax ((cont-syntax
-                                (syntax-rules ()
-                                    ((_ cont-arg) cont-body))))
-                 (cont-syntax 
+                 (%apply-syntax-lambda
+                   continuation
                    #(syntactic-fun
                      (arg ...)
-                     body))))
+                     body)))
             ((_ continuation (syntactic-if "INTERNAL" #f true-case false-case));IF/FALSE
                (%cps-syntactic-quasiquote-in-unquote
                  continuation
@@ -142,12 +140,10 @@
                continuation
                ()
                (obj ...)))
-            ((_ (syntax-lambda (cont-args) cont-body) obj)
-             (let-syntax ((cont-syntax 
-                            (syntax-rules ()
-                              ((_ cont-args) cont-body))))
-                  (cont-syntax
-                    obj)))))
+            ((_ continuation obj)
+                  (%apply-syntax-lambda
+                    continuation
+                    obj))))
 
      (define-syntax %cps-syntactic-quasiquote-list
          (syntax-rules (syntactic-unquote syntactic-unquote-splicing syntax-lambda)
@@ -190,15 +186,10 @@
                     (res ... it)
                     (obj2 ...)))
                obj1))
-            ((_ (syntax-lambda (cont-arg) cont-body)
-                "INTERNAL"
-                (res ...)
-                ())
-             (let-syntax ((cont-syntax
-                            (syntax-rules ()
-                              ((_ cont-arg) cont-body))))
-               (cont-syntax
-                 (res ...))))))
+            ((_ continuation "INTERNAL" (res ...) ())
+               (%apply-syntax-lambda
+                 continuation
+                 (res ...)))))
 
      (define-syntax %cps-syntactic-quasiquote
          (syntax-rules (syntax-lambda)
@@ -206,10 +197,10 @@
              (%cps-syntactic-quasiquote-list
                (syntax-lambda (cont-arg) cont-body)
                (obj1 obj2 ...)))
-            ((_ (syntax-lambda (cont-arg) cont-body) obj);ATOM
-             (let-syntax ((cont-syntax (syntax-rules () ((_ cont-arg) cont-body))))
-               (cont-syntax
-                 obj)))))
+            ((_ continuation obj);ATOM
+               (%apply-syntax-lambda
+                 continuation
+                 obj))))
 
      (define-syntax syntactic-quasiquote
          (syntax-rules ()
