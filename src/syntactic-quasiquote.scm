@@ -6,6 +6,7 @@
            syntactic-equal?
            syntactic-cons
            syntactic-map1
+           syntactic-symbol?
            )
    (begin
 
@@ -37,6 +38,21 @@
             (%apply-syntax-lambda
               continuation
               (a . b)))))
+
+     (define-syntax syntactic-symbol?
+         (syntax-rules (syntax-lambda)
+            ((_ continuation object)
+               (let-syntax ((aux-syntax
+                              (syntax-rules ()
+                                 ((_ object)
+                                    (%apply-syntax-lambda
+                                      continuation
+                                      #t))
+                                 ((_ _)
+                                    (%apply-syntax-lambda
+                                      continuation
+                                      #f)))))
+                           (aux-syntax symbol)))))
 
      (define-syntax syntactic-equal?
          (syntax-rules (syntax-lambda)
