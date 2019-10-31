@@ -7,6 +7,7 @@
            syntactic-map1
            syntactic-symbol?
            syntactic-append
+           syntactic-equal?
            )
    (begin
 
@@ -38,6 +39,87 @@
             (%apply-syntax-lambda
               continuation
               (a . b)))))
+
+     (define-syntax %syntactic-equal?-aux
+         (syntax-rules (syntax-lambda)
+            ((_ continuation #f _ ...)
+             (%apply-syntax-lambda
+               continuation
+               #f))
+
+            ((_ continuation #t ()())
+               (%apply-syntax-lambda
+                  continuation
+                  #t))
+            ((_ continuation #t ((a1 a2 ...) l1 ...) ((b1 b2 ...) l2 ...))
+             (%syntactic-equal?-aux continuation #t (a1 (a2 ...) l1 ...) (b1 (b2 ...) l2 ...)))
+
+            ((_ continuation #t (#(a ...) l1 ...) (#(b ...) l2 ...))
+             (%syntactic-equal?-aux continuation #t ((a ...) l1 ...) ((b ...) l2 ...)))
+            
+            ((_ continuation #t ((a1 a2 ...) l1 ...) _)
+               (%apply-syntax-lambda continuation #f))
+
+            ((_ continuation #t (#(a1 a2  ...) l1 ...) _)
+               (%apply-syntax-lambda continuation #f))
+
+            ((_ continuation #t (a l1 ...) (b l2 ...))
+             (let-syntax 
+               ((%type-check
+                  (syntax-rules %... ()
+                     ((_ a a-org);a is symbol
+                        (let-syntax ((%val-check 
+                                       (syntax-rules %%... (a-org)
+                                          ((_ a-org)
+                                           (%syntactic-equal?-aux 
+                                             continuation 
+                                             #t 
+                                             (l1 ...) 
+                                             (l2 ...)))
+                                          ((_ _)
+                                           (%apply-syntax-lambda
+                                             continuation
+                                             #f)))))
+                           (%val-check b)))
+                     ((_ _ _)
+                      (let-syntax ((%val-check
+                                     (syntax-rules %%... ()
+                                       ((_ a)
+                                        (%syntactic-equal?-aux 
+                                          continuation
+                                          #t 
+                                          (l1 ...) 
+                                          (l2 ...)))
+                                       ((_ _)
+                                        (%apply-syntax-lambda
+                                          continuation
+                                          #f)))))
+                           (%val-check b))))))
+               (%type-check symbol a)))
+         ((_ continuation _ _)
+          (%apply-syntax-lambda continuation #f))
+             ))
+
+
+     (define-syntax syntactic-equal?
+         (syntax-rules (syntax-lambda)
+            ((_ continuation a b)
+             (let-syntax 
+               ((sloppy-equal?
+                   (syntax-rules %... ()
+                     ((_ (a1 a2 %...) a-org)
+                        (%syntactic-equal?-aux 
+                          continuation #t a-org b))
+                     ((_ #(a1 a2 %...) a-org)
+                        (%syntactic-equal?-aux 
+                          continuation #t a-org b))
+                     ((_ a a-org)
+                        (%syntactic-equal?-aux 
+                          continuation #t (a-org) (b)))
+                     ((_ _ _)
+                      (%apply-syntax-lambda continuation #f)))))
+               (sloppy-equal? b a)
+               ))))
 
      (define-syntax syntactic-append
          (syntax-rules ()
