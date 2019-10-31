@@ -108,4 +108,18 @@
       => '(1 2 3 4 5 6 7))
    )
 
+(begin 
+  (check
+    (test-syntax
+      (quote
+        (syntactic-unquote
+          (syntactic-append
+            (syntactic-quote
+              (1 2 3))
+            (syntactic-quote
+              (4 5 6))))))
+    => '(1 2 3 4 5 6)))
+
 (check-report)
+
+

@@ -3,10 +3,10 @@
    (export syntactic-quasiquote
            syntactic-car
            syntactic-cdr
-           syntactic-equal?
            syntactic-cons
            syntactic-map1
            syntactic-symbol?
+           syntactic-append
            )
    (begin
 
@@ -38,6 +38,13 @@
             (%apply-syntax-lambda
               continuation
               (a . b)))))
+
+     (define-syntax syntactic-append
+         (syntax-rules ()
+            ((_ continuation (a ...) (b ...))
+             (%apply-syntax-lambda
+               continuation
+               (a ... b ...)))))
 
      (define-syntax syntactic-symbol?
          (syntax-rules (syntax-lambda)
