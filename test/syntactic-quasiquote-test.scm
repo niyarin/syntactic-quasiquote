@@ -54,34 +54,12 @@
                    y))))))
        => 2))
 
-(begin;syntactic-equal?
-  (check
-    (test-syntax 
-      (syntactic-unquote
-         (syntactic-equal?
-           1 1)))
-    => #t)
-  (check
-    (test-syntax 
-      (syntactic-unquote
-         (syntactic-equal?
-           1 2)))
-    => #f)
-  (check
-    (test-syntax 
-      (syntactic-unquote
-         (syntactic-equal?
-           (syntactic-quote (1 1))
-           (syntactic-quote (1 1)))))
-    => #t)
-  )
-
 (begin;IF
    (check
       (test-syntax
         (syntactic-unquote
           (syntactic-if
-            (syntactic-equal? 1 1)
+            (syntactic-symbol? abc)
                (syntactic-quote 'ok)
                (syntactic-quote 'ng))))
       => 'ok)
@@ -90,11 +68,10 @@
       (test-syntax
         (syntactic-unquote
           (syntactic-if
-            (syntactic-equal? 1 2)
+            (syntactic-symbol? "not symbol")
                (syntactic-quote 'ok)
                (syntactic-quote 'ng))))
-      => 'ng)
-   )
+      => 'ng))
 
 (begin;MAP1
   (check

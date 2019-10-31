@@ -54,21 +54,6 @@
                                       #f)))))
                            (aux-syntax symbol)))))
 
-     (define-syntax syntactic-equal?
-         (syntax-rules (syntax-lambda)
-            ((_ continuation a b)
-                (let-syntax ((%equal
-                               (syntax-rules %... ()
-                                 ((_ a) 
-                                  (%apply-syntax-lambda
-                                    continuation
-                                    #t))
-                                 ((_ v %...) 
-                                  (%apply-syntax-lambda
-                                    continuation
-                                    #f)))))
-                     (%equal b)))))
-
      (define-syntax syntactic-map1
          (syntax-rules (syntax-lambda)
             ((_ continuation fun ())
